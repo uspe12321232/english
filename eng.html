@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>英単語テスト</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; }
+    #header {
+      padding: 10px;
+      text-align: center;
+      background-color: #f8f8f8;
+      border-bottom: 1px solid #ccc;
+    }
+    #header button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    #main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+    #quiz-box input {
+      width: 300px;
+      font-size: 18px;
+      text-align: center;
+    }
+    .hidden { display: none; }
+    #result-box {
+      margin-top: 30px;
+      width: 100%;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .result-item {
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <button onclick="startQuiz('all')">全問モード</button>
+    <button onclick="startQuiz('random')">ランダムモード</button>
+  </div>
+
+  <div id="main">
+    <div id="quiz-box" class="hidden">
+      <p id="question-number"></p>
+      <p id="question-text"></p>
+      <input type="text" id="user-answer" placeholder="英単語を入力">
+      <br><br>
+      <div>
+        <button onclick="prevQuestion()">戻る</button>
+        <button id="next-btn" onclick="nextQuestion()">次へ</button>
+        <button id="result-btn" onclick="goToResultPage()" style="display:none;">採点ページへ</button>
+      </div>
+    </div>
+
+    <div id="result-page" class="hidden">
+      <h2>最後の問題が終わりました！</h2>
+      <button onclick="showResults()">採点する</button>
+      <button onclick="backToLastQuestion()">戻る</button>
+    </div>
+
+    <div id="result-box" class="hidden"></div>
+  </div>
+
+  <!-- 外部JSファイルを読み込み -->
+  <script src="quizData.js"></script>
+
+  <script>
+    let quiz = [];
+    let userAnswers = [];
+    let currentIndex = 0;
+
+    function startQuiz(mode) {
+      quiz = (mode === 'random') ? shuffleArray(quizData).slice(0, 10) : [...quizData];
+      userAnswers = Array(quiz.length).fill("");
+      currentIndex = 0;
+      document.getElementById("result-box").classList.add("hidden");
+      document.getElementById("result-page").classList.add("hidden");
+      document.getElementById("quiz-box").classList.remove("hidden");
+      showQuestion();
+    }
+
+    function shuffleArray(array) {
+      return array.map(v => ({ v, r: Math.random() }))
+                  .sort((a, b) => a.r - b.r)
+                  .map(obj => obj.v);
+    }
+
+    function showQuestion() {
+      const q = quiz[currentIndex];
+      document.getElementById("question-number").textContent = `問題 ${currentIndex + 1} / ${quiz.length}`;
+      document.getElementById("question-text").innerHTML = q.japanese;
+      document.getElementById("user-answer").value = userAnswers[currentIndex];
+      document.getElementById("user-answer").focus();
+
+      const nextBtn = document.getElementById("next-btn");
+      const resultBtn = document.getElementById("result-btn");
+
+      if (currentIndex === quiz.length - 1) {
+        nextBtn.style.display = "none";
+        resultBtn.style.display = "inline-block";
+      } else {
+        nextBtn.style.display = "inline-block";
+        resultBtn.style.display = "none";
+      }
+    }
+
+    function nextQuestion() {
+      userAnswers[currentIndex] = document.getElementById("user-answer").value.trim();
+      if (currentIndex < quiz.length - 1) {
+        currentIndex++;
+        showQuestion();
+      }
+    }
+
+    function prevQuestion() {
+      userAnswers[currentIndex] = document.getElementById("user-answer").value.trim();
+      if (currentIndex > 0) {
+        currentIndex--;
+        showQuestion();
+      }
+    }
+
+    function goToResultPage() {
+      userAnswers[currentIndex] = document.getElementById("user-answer").value.trim();
+      document.getElementById("quiz-box").classList.add("hidden");
+      document.getElementById("result-page").classList.remove("hidden");
+    }
+
+    function backToLastQuestion() {
+      document.getElementById("result-page").classList.add("hidden");
+      document.getElementById("quiz-box").classList.remove("hidden");
+      showQuestion();
+    }
+
+    function showResults() {
+      let score = 0;
+      const resultBox = document.getElementById("result-box");
+      resultBox.innerHTML = "<h2>結果</h2>";
+
+      quiz.forEach((q, i) => {
+        const user = userAnswers[i] || "";
+        const correct = q.english;
+        const isCorrect = user.toLowerCase() === correct.toLowerCase();
+        if (isCorrect) score++;
+
+        const item = document.createElement("div");
+        item.className = "result-item";
+
+        const mark = isCorrect
+          ? '<span style="color:green; font-weight:bold;">✓ 正解</span>'
+          : '<span style="color:red; font-weight:bold;">× 不正解</span>';
+
+        item.innerHTML = `
+          <div><strong>問題 ${i + 1}</strong></div>
+          <div>和訳: ${q.japanese}</div>
+          <div>自分の回答: ${user}</div>
+          <div>正しい答え: ${correct}</div>
+          <div>${mark}</div>
+        `;
+        resultBox.appendChild(item);
+      });
+
+      const summary = document.createElement("p");
+      summary.style.fontWeight = "bold";
+      summary.textContent = `正解数: ${score} / ${quiz.length}`;
+      resultBox.appendChild(summary);
+      resultBox.classList.remove("hidden");
+    }
+
+    // Enterキーで次へ
+    window.onload = () => {
+      startQuiz('all');
+      const answerInput = document.getElementById("user-answer");
+      answerInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          if (currentIndex < quiz.length - 1) {
+            nextQuestion();
+          } else {
+            goToResultPage();
+          }
+        }
+      });
+    };
+  </script>
+</body>
+</html>
