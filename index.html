@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>英単語テスト21-22</title>
+  <title>英単語テスト</title>
   <style>
     body { margin: 0; font-family: sans-serif; }
     #header {
@@ -53,7 +53,7 @@
   <div id="main">
     <div id="quiz-box" class="hidden">
       <p id="question-number"></p>
-      <p id="question-text"></p>
+      <div id="question-text"></div>
       <input type="text" id="user-answer" placeholder="英単語を入力">
       <br><br>
       <div>
@@ -99,7 +99,10 @@
     function showQuestion() {
       const q = quiz[currentIndex];
       document.getElementById("question-number").textContent = `問題 ${currentIndex + 1} / ${quiz.length}`;
-      document.getElementById("question-text").innerHTML = q.japanese;
+      document.getElementById("question-text").innerHTML = `
+        <div style="margin-bottom:10px;">${q.sentence}</div>
+        <div>${q.japanese}</div>
+      `;
       document.getElementById("user-answer").value = userAnswers[currentIndex];
       document.getElementById("user-answer").focus();
 
@@ -163,6 +166,7 @@
 
         item.innerHTML = `
           <div><strong>問題 ${i + 1}</strong></div>
+          <div>英文: ${q.sentence}</div>
           <div>和訳: ${q.japanese}</div>
           <div>自分の回答: ${user}</div>
           <div>正しい答え: ${correct}</div>
