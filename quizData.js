@@ -1,10 +1,10 @@
 const quizData = [
   { english: "probably", japanese: "彼は <strong>おそらく</strong> 試験に合格するだろう。", sentence: "He will (p ) pass the examination." },
-  { english: "maybe", japanese: "<strong>おそらく</strong> すぐに彼は来るだろう。", sentence: "(m ) he will come soon." },
+  { english: "Maybe", japanese: "<strong>おそらく</strong> すぐに彼は来るだろう。", sentence: "(M ) he will come soon." },
   { english: "intentionally", japanese: "あなたは <strong>意図的に</strong> 私たちにうそをつきましたね。", sentence: "You have (i ) lied to us." },
   { english: "intend", japanese: "私たちはこの不公平な制度を終わらせる <strong>つもりだ</strong>。", sentence: "We (i ) to end this unfair system." },
   { english: "deliberately", japanese: "A国は <strong>故意に</strong> B国を攻撃している。", sentence: "Country A has (d ) attacked Country B." },
-  { english: "almost", japanese: "<strong>ほとんど</strong> すべての葉が散ってしまった。", sentence: "(a ) all the leaves have fallen." },
+  { english: "Almost", japanese: "<strong>ほとんど</strong> すべての葉が散ってしまった。", sentence: "(A ) all the leaves have fallen." },
   { english: "bath", japanese: "私はふつうシャワーよりも <strong>ふろ</strong> に入る。", sentence: "I usually take a (b ) rather than a shower." },
   { english: "use", japanese: "あなたはこの新しい情報をどのように <strong>使います</strong> か。", sentence: "How will you (u ) this new information?" },
   { english: "borrow", japanese: "今度の日曜日に君の自転車を <strong>借りて</strong> いいかな?", sentence: "Can I (b ) your bicycle next Sunday?" },
@@ -40,5 +40,9 @@ const quizData = [
   { english: "silk", japanese: "彼女は <strong>絹</strong> の服を着ている。", sentence: "She is dressed in (s )." },
   { english: "later", japanese: "私は金曜と土曜の夜はたいてい、いつもより <strong>遅く</strong> まで起きている。", sentence: "I usually stay up (l ) on Friday and Saturday nights." },
   { english: "learned", japanese: "この授業では何を <strong>学んでいますか</strong>。", sentence: "What have you (l ) in this class?" },
-  { english: "master", japanese: "彼女はその言語を <strong>習得する</strong> のに2年かかった。", sentence: "It took her two years to (m ) the language." }
+  { english: "master", japanese: "彼女はその言語を <strong>習得する</strong> のに2年かかった。", sentence: "It took her two years to (m ) the language." },
+  { english: "paper", japanese: "彼女は物理学に関する <strong>論文</strong> を発表した。", sentence: "She presented a (p ) on physics." },
+  { english: "sheet", japanese: "<strong>紙</strong> を1枚いただけますか。", sentence: "Could I have a (s ) of paper, please?" },
+  { english: "document", japanese: "この <strong>文書</strong> を注意深くご覧ください。", sentence: "Please look carefully at this (d )." },
+  { english: "vegetables", japanese: "今日では家庭で育てるのが簡単な <strong>野菜</strong> がたくさんある。", sentence: "Today there are many (v ) that are easy to grow at home." }
 ];
