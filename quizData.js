@@ -32,7 +32,7 @@ const quizData = [
   { english: "military", japanese: "私は <strong>軍隊</strong> に費やすお金を削減すべきだと信じています。", sentence: "I believe we should reduce the money we spend on the (m )." },
   { english: "weapons", japanese: "世界は核 <strong>兵器</strong> を排除するために努力しなければならない。", sentence: "The world should work hard to eliminate nuclear (w )." },
   { english: "sign", japanese: "黒い雲は雨の <strong>前触れ</strong> だ。", sentence: "Black clouds are a (s ) of rain." },
-  { english: "mark", japanese: "意味のわからない語に <strong>印をつけなさい</strong>。", sentence: "(m ) the words you don't understand." },
+  { english: "Mark", japanese: "意味のわからない語に <strong>印をつけなさい</strong>。", sentence: "(M ) the words you don't understand." },
   { english: "heaven", japanese: "まるで <strong>天国</strong> にいるようでした。", sentence: "It was like I was in (h )." },
   { english: "wood", japanese: "私の机は <strong>木</strong> でできている。", sentence: "My desk is made of (w )." },
   { english: "covered", japanese: "地面は雪で <strong>覆われている</strong>。", sentence: "The land is (c ) with snow." },
