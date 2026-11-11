@@ -1,216 +1,480 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>英単語テスト</title>
-  <style>
-    body { margin: 0; font-family: sans-serif; }
-    #header {
-      padding: 10px;
-      text-align: center;
-      background-color: #f8f8f8;
-      border-bottom: 1px solid #ccc;
-    }
-    #header button {
-      margin: 5px;
-      padding: 10px 20px;
-      font-size: 16px;
-    }
-    #main {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 30px;
-    }
-    #quiz-box input {
-      width: 300px;
-      font-size: 18px;
-      text-align: center;
-    }
-    .hidden { display: none; }
-    #result-box {
-      margin-top: 30px;
-      width: 100%;
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-    .result-item {
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #eee;
-    }
-    #quiz-box {
-      width: 100%;
-      max-width: 500px;
-    }
-    #nav-buttons {
-      position: sticky;
-      top: 120px;        /* 入力欄の下あたり */
-      margin-top: 15px;
-      background: white;
-      padding: 10px 0;
-      text-align: center;
-      border-top: 1px solid #ddd;
-    }
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>文法一問一答</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Source+Serif+4:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: one-column answer sheet. Home lists the courses as numbered rows,
+   the quiz is a single question card with a typing field, results split into a score and a review list. */
+:root{
+  --paper:#F2F4F9; --card:#FFFFFF; --ink:#18203A; --ink2:#55607F; --rule:#D5DAE8;
+  --accent:#2B3DB4; --on-accent:#FFFFFF;
+  --good:#16794B; --good-bg:#E1F3E9; --bad:#C22E27; --bad-bg:#FCE6E4; --mark:#FFEE99;
+  --f-jp:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  --f-en:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --f-mono:"DM Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1325; --card:#161D35; --ink:#E9EDF9; --ink2:#9CA7CB; --rule:#29325A;
+    --accent:#9AA7FF; --on-accent:#0E1325;
+    --good:#58CF98; --good-bg:#10301F; --bad:#FF8A80; --bad-bg:#381715; --mark:#5A4F12;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1325; --card:#161D35; --ink:#E9EDF9; --ink2:#9CA7CB; --rule:#29325A;
+  --accent:#9AA7FF; --on-accent:#0E1325;
+  --good:#58CF98; --good-bg:#10301F; --bad:#FF8A80; --bad-bg:#381715; --mark:#5A4F12;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:var(--f-jp); font-size:16px; line-height:1.7;
+  padding-block:20px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.app{max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.sec{display:flex;flex-direction:column;gap:12px}
 
-  </style>
-</head>
-<body>
-  <div id="header">
-    <button onclick="startQuiz('all')">全問モード</button>
-    <button onclick="startQuiz('random')">ランダムモード</button>
-  </div>
+/* home */
+.kicker{margin:0;font-family:var(--f-mono);font-size:.78rem;letter-spacing:.06em;color:var(--ink2)}
+h1{margin:.15em 0 .25em;font-size:2.5rem;line-height:1.2;font-weight:700;letter-spacing:.03em;text-wrap:balance}
+h2{margin:0;font-size:.8rem;font-weight:700;letter-spacing:.1em;color:var(--ink2)}
+.lead{margin:0;color:var(--ink2)}
+.list{display:flex;flex-direction:column;gap:10px}
+.course{
+  display:grid;grid-template-columns:3.2ch 1fr auto;align-items:center;gap:16px;
+  width:100%;min-height:76px;text-align:left;cursor:pointer;
+  background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:14px 18px;
+}
+.course:hover{border-color:var(--accent)}
+.course .n{font-family:var(--f-mono);font-size:2.3rem;line-height:1;font-weight:500;color:var(--accent);text-align:right;font-variant-numeric:tabular-nums}
+.course b{display:block;font-size:1.05rem;line-height:1.4}
+.course small{display:block;color:var(--ink2);font-size:.85rem;line-height:1.5}
+.course .go{font-size:1.3rem;color:var(--ink2)}
+.course.weak .n{color:var(--bad)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--card)}
+.seg button{border:0;background:transparent;padding:8px 14px;cursor:pointer;font-size:.9rem}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.opt span{color:var(--ink2);font-size:.9rem}
+.cov{border-top:1px solid var(--rule)}
+.cov div{display:grid;grid-template-columns:6.5em 1fr auto;gap:10px;padding:9px 2px;border-bottom:1px solid var(--rule);font-size:.92rem}
+.cov .p{font-family:var(--f-mono);font-size:.82rem;color:var(--ink2);padding-top:.1em}
+.cov .c{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.linkbtn{background:none;border:0;padding:6px 0;color:var(--ink2);text-decoration:underline;cursor:pointer;font-size:.85rem;text-align:left}
 
-  <div id="main">
-    <div id="quiz-box" class="hidden">
-      <p id="question-number"></p>
-      <div id="question-text"></div>
-      <input type="text" id="user-answer" placeholder="英単語を入力">
-      <br><br>
-      <div>
-        <button onclick="prevQuestion()">戻る</button>
-        <button id="next-btn" onclick="nextQuestion()">次へ</button>
-        <button id="result-btn" onclick="goToResultPage()" style="display:none;">採点ページへ</button>
-      </div>
-    </div>
+/* quiz */
+.qtop{display:flex;align-items:center;gap:14px}
+.prog{flex:1;min-width:0;display:flex;align-items:center;gap:12px}
+.cnt{font-family:var(--f-mono);font-size:1.15rem;font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cnt small{color:var(--ink2);font-size:.85rem}
+.bar{flex:1;height:6px;background:var(--rule);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+.quit{background:none;border:1px solid var(--rule);border-radius:10px;padding:6px 12px;cursor:pointer;font-size:.85rem;color:var(--ink2)}
+.confirm{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border:1px solid var(--bad);border-radius:12px;background:var(--bad-bg);font-size:.92rem}
+.flag{margin:0;font-size:.8rem;font-weight:700;letter-spacing:.08em;color:var(--accent)}
+.qcard{background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:20px 18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:2px 12px;font-family:var(--f-mono);font-size:.74rem;color:var(--ink2)}
+.ja{margin:0;font-size:1.08rem;font-weight:500;line-height:1.7}
+.note{margin:0;color:var(--ink2);font-size:.9rem}
+.tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.06em;padding:1px 8px;border-radius:6px;background:var(--paper);border:1px solid var(--rule);margin-right:8px;color:var(--ink2);vertical-align:.05em}
+.en{margin:0;font-family:var(--f-en);font-size:1.3rem;line-height:2;overflow-wrap:anywhere}
+.bl{display:inline-block;width:2.6em;height:1em;border-bottom:2px solid var(--ink);margin:0 .22em}
+.chip{display:inline-block;font-family:var(--f-en);font-size:.88em;line-height:1.4;padding:0 .55em;margin:.12em .15em;border:1px solid var(--ink2);border-radius:6px;background:var(--paper)}
+.hl{background:var(--mark);color:inherit;padding:0 .15em;border-radius:3px;font-weight:600}
+form{display:flex;flex-direction:column;gap:12px}
+.lbl{display:block;font-family:var(--f-jp);font-size:.8rem;color:var(--ink2);margin-bottom:4px}
+.ans{
+  width:100%;font-family:var(--f-en);font-size:1.3rem;color:var(--ink);
+  background:var(--paper);border:1px solid var(--rule);border-bottom:2px solid var(--accent);
+  border-radius:10px 10px 0 0;padding:.65em .75em;
+}
+.ans::placeholder{color:var(--ink2);opacity:.7;font-family:var(--f-jp);font-size:1rem}
+.ans:focus{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 28%,transparent)}
+.warn{margin:0;color:var(--bad);font-size:.88rem}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{font-weight:700;border-radius:12px;padding:12px 18px;border:1px solid transparent;cursor:pointer;min-height:48px}
+.btn.primary{background:var(--accent);color:var(--on-accent);flex:1 1 55%}
+.btn.ghost{background:transparent;border-color:var(--rule);color:var(--ink)}
+.verdict{display:flex;align-items:center;gap:10px;font-size:1.15rem;padding:10px 14px;border-radius:12px}
+.verdict.good{background:var(--good-bg);color:var(--good)}
+.verdict.bad{background:var(--bad-bg);color:var(--bad)}
+.verdict svg{width:26px;height:26px;flex:none}
+.yours .s{font-family:var(--f-en);font-size:1.1rem;color:var(--bad);overflow-wrap:anywhere}
+.exp{margin:0;font-size:.95rem}
+.others{margin:0;font-size:.85rem;color:var(--ink2);overflow-wrap:anywhere}
 
-    <div id="result-page" class="hidden">
-      <h2>最後の問題が終わりました！</h2>
-      <button onclick="showResults()">採点する</button>
-      <button onclick="backToLastQuestion()">戻る</button>
-    </div>
+/* results */
+.score{display:flex;align-items:baseline;gap:8px}
+.score .big{font-family:var(--f-mono);font-size:4.2rem;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.score .of{font-family:var(--f-mono);font-size:1.4rem;color:var(--ink2)}
+.split{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--bad)}
+.split i{display:block;background:var(--good)}
+.wlist{display:flex;flex-direction:column;gap:10px}
+.wi{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.wi .en{font-size:1.1rem;line-height:1.8}
+.stack{display:flex;flex-direction:column;gap:10px}
+.stack .btn{width:100%}
+.muted{margin:0;color:var(--ink2);font-size:.9rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
 
-    <div id="result-box" class="hidden"></div>
-  </div>
+<div class="app" id="app"></div>
 
-  <!-- 外部JSファイルを読み込み -->
-  <script src="quizData.js"></script>
+<script>
+const KEY = 'bunpo-ittou-weak-v1';
+const SRC = {
+  p65: {l:'p.65 Exercise 17', t:'比較(1)'},
+  p67: {l:'p.67 Exercise 18', t:'比較(2)'},
+  p69: {l:'p.69', t:'比較 Plus'},
+  p71: {l:'p.71 Exercise 19', t:'関係詞(1)'},
+  p73: {l:'p.73 Exercise 20', t:'関係詞(2)'},
+  p75: {l:'p.75 Exercise 21', t:'関係詞(3)'},
+  p77: {l:'p.77', t:'複合関係詞'}
+};
 
-  <script>
-    let quiz = [];
-    let userAnswers = [];
-    let currentIndex = 0;
+/* 問題データ
+   F: [[ ]] の中が正解（空欄が複数あれば順に空白で区切って入力）
+   words: 並べかえ用の語句 / tp: 種類ラベル / alt: 別解（空欄に入る部分） */
+const QS = [];
+const F = (s, ja, t, o = {}) => QS.push({s, ja, t, ...o});
+const SORT = '並べかえ', TR = '和文英訳';
 
-    function startQuiz(mode) {
-      quiz = (mode === 'random') ? shuffleArray(quizData).slice(0, 10) : [...quizData];
-      userAnswers = Array(quiz.length).fill("");
-      currentIndex = 0;
-      document.getElementById("result-box").classList.add("hidden");
-      document.getElementById("result-page").classList.add("hidden");
-      document.getElementById("quiz-box").classList.remove("hidden");
-      showQuestion();
-    }
+/* p.65 */
+F('p65','ボブはあのバレーボール選手と同じくらいの背の高さだ。','Bob is [[as tall as]] that volleyball player.',{exp:'as 原級 as =「〜と同じくらい…」。間の形容詞・副詞は原形のまま。'});
+F('p65','エミはジムと同じくらい速く泳ぐことができる。','Emi can [[swim as fast as]] Jim.',{exp:'動詞のあとに as 副詞 as を続ける。'});
+F('p65','彼はあのレスラーほど強くはない。','He is [[not as strong as]] that wrestler.',{alt:['not so strong as'],exp:'not as[so] 原級 as =「〜ほど…ない」。'});
+F('p65','私の姉はあなたの姉より年上です。','My sister is [[older]] than your sister.',{note:'difficult / early / old から選び、適切な形にする',exp:'old の比較級は older。'});
+F('p65','私は今朝、母より早く起きた。','I woke up [[earlier]] than my mother this morning.',{note:'difficult / early / old から選び、適切な形にする',exp:'early の比較級は earlier（y → ier）。'});
+F('p65','数学は私にとって英語より難しい。','Math is [[more difficult]] than English for me.',{note:'difficult / early / old から選び、適切な形にする',exp:'difficult のような長い語は more + 原級。'});
+F('p65','私はいとこと同い年です。','I am [[as]] old [[as]] my cousin.',{note:'イラスト: 父49歳・母51歳・私17歳・いとこ17歳',exp:'私といとこは同じ17歳なので as old as。'});
+F('p65','父は母より2歳年下です。','My father is [[two]] years [[younger]] than my mother.',{note:'イラスト: 父49歳・母51歳・私17歳・いとこ17歳',exp:'51歳 − 49歳 = 2歳差。差は比較級の前に置く。'});
+F('p65','母は私の3倍の年齢です。','My mother is [[three times]] as old as me.',{note:'イラスト: 父49歳・母51歳・私17歳・いとこ17歳',exp:'倍数 + as 原級 as。51 ÷ 17 = 3 なので three times。'});
+F('p65','私は彼と同じくらいのクッキーを食べた。','I ate [[as many cookies as]] him.',{words:['as','cookies','as','many'],tp:SORT,exp:'as many + 複数名詞 + as 〜。'});
+F('p65','マイクは妹の2倍の体重だ。','Mike is [[twice as heavy as]] his sister.',{words:['as','as','heavy','twice'],tp:SORT,exp:'twice as 原級 as =「〜の2倍…」。倍数は最初の as の前。'});
+F('p65','ケンはあなたより背が高くない。','Ken is [[not taller than]] you.',{words:['not','than','taller'],tp:SORT});
+F('p65','私は今日、妹よりずっと忙しい。','I am [[much busier than]] my sister today.',{words:['busier','than','much'],tp:SORT,exp:'比較級の強調は much。busy の比較級は busier。'});
+F('p65','私は母ほど料理がうまくない。','I [[do not cook as well as]] my mother.',{tp:TR,note:'as ... as 〜 を使って書く',alt:['can not cook as well as','am not as good a cook as'],exp:'not as 原級 as。「うまく」は副詞なので well。'});
 
-    function shuffleArray(array) {
-      return array.map(v => ({ v, r: Math.random() }))
-                  .sort((a, b) => a.r - b.r)
-                  .map(obj => obj.v);
-    }
+/* p.67 */
+F('p67','ナイル川は世界でもっとも長い川だ。','The Nile is [[the longest river]] in the world.',{exp:'the + 最上級 + 名詞。'});
+F('p67','この写真は3枚の中でもっとも美しい。','This picture is [[the most beautiful of]] the three.',{exp:'長い語の最上級は the most + 原級。「of + 複数」で範囲を示す。'});
+F('p67','ナディアは私たちの学校でもっとも上手に歌うことができる。','Nadia can [[sing best in]] our school.',{alt:['sing the best in'],exp:'in + 場所・集団。副詞の最上級では the が省略されることも多い。'});
+F('p67','東京スカイツリーは日本で飛び抜けてもっとも高い建造物だ。','Tokyo Skytree is [[by far the tallest structure]] in Japan.',{words:['by far','structure','tallest','the'],tp:SORT,exp:'by far the 最上級 =「飛び抜けて〜」。'});
+F('p67','この湖はこの国で3番目に水深が深い。','This lake [[is the third deepest in]] this country.',{words:['the','deepest','is','in','third'],tp:SORT,exp:'the + 序数 + 最上級 =「〜番目に…」。'});
+F('p67','法隆寺は日本でもっとも古い寺の1つだ。','Horyuji [[is one of the oldest temples in]] Japan.',{words:['oldest','in','of','is','one','the','temples'],tp:SORT,exp:'one of the + 最上級 + 複数名詞。'});
+F('p67','私たちのクラスで、リカと同じくらい速く泳げる生徒はほかにいない。','[[No other]] student in our class can swim as fast as Rika.',{note:'もとの文: Rika swims fastest in our class.（リカはクラスでいちばん速く泳ぐ。）',exp:'No other + 単数名詞 … as 原級 as 〜。'});
+F('p67','私たちのクラスで、リカより速く泳げる生徒はほかにいない。','[[No other]] student in our class can swim [[faster]] than Rika.',{note:'もとの文: Rika swims fastest in our class.（リカはクラスでいちばん速く泳ぐ。）',exp:'No other + 単数名詞 … 比較級 than 〜。'});
+F('p67','リカは私たちのクラスのほかのどの生徒よりも速く泳げる。','Rika can swim faster [[than any other]] student in our class.',{note:'もとの文: Rika swims fastest in our class.（リカはクラスでいちばん速く泳ぐ。）',exp:'比較級 than any other + 単数名詞。'});
+F('p67','これはパリでもっとも値段が高いホテルです。','This is [[the most expensive hotel]] in Paris.',{note:'expensive / hotel を使う'});
+F('p67','ロシアはほかのどの国よりも広い。','Russia is [[larger than any other country]].',{note:'large / country を使う',exp:'large の比較級は larger（-r だけ付ける）。'});
+F('p67','彼は私たちみんなの中でもっとも背が高い。','He is [[the tallest of]] us all.',{tp:TR,alt:['the tallest among'],exp:'最上級 + of + 複数（us all）。'});
 
-    function showQuestion() {
-      const q = quiz[currentIndex];
-      document.getElementById("question-number").textContent = `問題 ${currentIndex + 1} / ${quiz.length}`;
-      document.getElementById("question-text").innerHTML = `
-        <div style="margin-bottom:10px;">${q.sentence}</div>
-        <div>${q.japanese}</div>
-      `;
-      document.getElementById("user-answer").value = userAnswers[currentIndex];
-      document.getElementById("user-answer").focus();
+/* p.69 */
+F('p69','私はできるだけ早く東京駅に着きたい。','I want to get to Tokyo Station [[as]] early [[as possible]].',{exp:'as 原級 as possible =「できるだけ〜」。'});
+F('p69','その映画はもとの小説ほどおもしろくなかった。','The movie was [[less interesting]] than the original novel.',{exp:'less 原級 than =「〜ほど…でない」。'});
+F('p69','これは彼の全作品の中でもっとも人気のない小説だ。','This is [[the least popular]] novel of all his works.',{exp:'the least 原級 =「もっとも〜でない」。'});
+F('p69','35,000人もの人が東京マラソンを走った。','[[As many as]] 35,000 people ran in the Tokyo Marathon.',{note:'not so much / as many as / as much as から選ぶ',exp:'数えられるもの（人）の「〜も」は as many as。'});
+F('p69','ジャックは昨夜、800グラムものステーキを食べた。','Jack ate [[as much as]] 800 grams of steak last night.',{note:'not so much / as many as / as much as から選ぶ',exp:'数えられない量の「〜も」は as much as。'});
+F('p69','ポールは内気というよりはむしろもの静かだ。','Paul is [[not so much]] shy as quiet.',{note:'not so much / as many as / as much as から選ぶ',exp:'not so much A as B =「AというよりむしろB」。'});
+F('p69','できるだけ大きく口を開けてください。','Open your mouth [[as wide as possible]].',{note:'wide / possible'});
+F('p69','彼女はできるだけはっきりと彼にそれを説明した。','She explained it to him [[as clearly as she could]].',{note:'clearly / could',exp:'as 原級 as + 主語 + can[could] =「できるだけ〜」。'});
+F('p69','この本は3冊の中でもっともおもしろくなかった。','This book was [[the least interesting]] of the three.',{note:'least'});
+F('p69','ジョーとサンディーは双子の姉妹だ。ジョーは2人のうち背の高いほうだ。','Jo and Sandy are twin sisters. Jo is [[the taller of]] the two.',{note:'tall',exp:'2人のうち「より〜なほう」は the + 比較級 + of the two。'});
+F('p69','世界はますます小さくなっている。','The world is getting [[smaller and smaller]].',{note:'small',exp:'比較級 and 比較級 =「ますます〜」。'});
+F('p69','切符を早く買えば買うほど、値段は安くなる。','[[The earlier]] you buy your ticket, [[the lower]] the price is.',{note:'early / low',exp:'the 比較級 〜, the 比較級 … =「〜すればするほど…」。'});
+F('p69','私のコンピュータはあのコンピュータほど値段は高くない。','My computer is [[not as expensive as]] that one.',{tp:TR,alt:['not so expensive as','less expensive than'],exp:'not as 原級 as、または less 原級 than。'});
 
-      const nextBtn = document.getElementById("next-btn");
-      const resultBtn = document.getElementById("result-btn");
+/* p.71 */
+F('p71','彼女にはロサンゼルスで働いている友人がいる。','She has a friend [[who works]] in Los Angeles.',{note:'which / who から選び、動詞も入れる',alt:['that works'],exp:'先行詞が人なので who。主格の関係代名詞の直後は動詞（三単現の s）。'});
+F('p71','私は値段が安くて小さいデジタルカメラを買いたい。','I want to buy a digital camera [[which is]] cheap and small.',{note:'which / who から選び、be動詞も入れる',alt:['that is'],exp:'先行詞が物なので which。'});
+F('p71','ルノアールによって描かれた絵は向こうにある。','The picture [[which was]] painted by Renoir is over there.',{note:'which / who から選び、be動詞も入れる',alt:['that was'],exp:'絵は「描かれる」側なので受け身 was painted。'});
+F('p71','これは姉が学校に乗っていく自転車です。','This is [[the bicycle which my sister rides]] to school.',{words:['my sister','the bicycle','rides','which'],tp:SORT,alt:['the bicycle that my sister rides'],exp:'目的格の which のあとは「主語 + 動詞」。'});
+F('p71','ハワード先生は私たちが尊敬する先生です。','Ms. Howard is [[a teacher who we respect]].',{words:['respect','a teacher','we','who'],tp:SORT,alt:['a teacher whom we respect','a teacher that we respect'],exp:'目的格の関係代名詞は who のほか whom, that も使える。'});
+F('p71','これは私が知っている最高のレストランだ。','This is [[the best restaurant that I know]].',{words:['I','know','that','the best restaurant'],tp:SORT,exp:'最上級が先行詞のときは that がよく使われる。'});
+F('p71','私は姉が有名な歌手の女の子を知っている。','I know a girl [[whose sister]] is a famous singer.',{exp:'所有格の関係代名詞 whose + 名詞。'});
+F('p71','ヘンリーは色があざやかな赤の車を持っている。','Henry owns a car [[whose color]] is bright red.',{alt:['whose colour'],exp:'a car\'s color の意味なので whose color。'});
+F('p71','これは私がブラジルで買った帽子です。','This is the hat [[which I bought]] in Brazil.',{note:'which を使う',alt:['that I bought','I bought'],exp:'目的格の which は省略もできる。'});
+F('p71','私はすぐには書名を思い出せない本を読んだ。','I read [[a book whose title]] I can\'t remember right now.',{note:'a book / whose / title'});
+F('p71','私の父はコンピュータを作る会社で働いている。','My father works for [[a company which makes]] computers.',{note:'a company / which',alt:['a company that makes'],exp:'先行詞 a company は単数なので makes。'});
+F('p71','私が昨日会った女性は、医者です。','The woman [[who I met yesterday]] is a doctor.',{tp:TR,alt:['whom I met yesterday','that I met yesterday','I met yesterday'],exp:'目的格の関係代名詞は省略もできる。'});
 
-      if (currentIndex === quiz.length - 1) {
-        nextBtn.style.display = "none";
-        resultBtn.style.display = "inline-block";
-      } else {
-        nextBtn.style.display = "inline-block";
-        resultBtn.style.display = "none";
-      }
-    }
+/* p.73 */
+F('p73','これは彼女が興味を持っている種類の音楽です。','This is the type of music [[which]] she is interested in.',{note:'which / whose から選ぶ',exp:'be interested in の目的語が music なので which。'});
+F('p73','ヘレンがいっしょに踊っている男の子は、彼女のクラスメートです。','The boy [[who]] Helen is dancing with is her classmate.',{note:'who / whose から選ぶ',alt:['whom'],exp:'dance with の目的語が the boy なので目的格（who / whom）。'});
+F('p73','これは私が以前住んでいた家です。','This is the house in [[which]] I lived before.',{note:'which / that から選ぶ',exp:'前置詞のすぐあとに that は使えない。'});
+F('p73','ビルが話しかけた女性はジョンソンさんでした。','The woman to [[whom]] Bill spoke was Ms. Johnson.',{note:'who / whom から選ぶ',exp:'前置詞のあとは whom。'});
+F('p73','スティーブが買ったのはこの白い車だ。','[[What]] Steve [[bought]] is this white car.',{exp:'what =「〜するもの[こと]」。先行詞を含む関係代名詞。'});
+F('p73','そのジャケットは彼が買いたかったものではなかった。','That jacket was not [[what he wanted]] to buy.');
+F('p73','私は彼がしたことが信じられなかった。','I couldn\'t believe [[what he did]].');
+F('p73','彼女は犬を飼っていて、それはとても年をとっている。','She has [[a dog, which is very old]].',{words:['a dog','is','very old','which',','],tp:SORT,exp:'「, which」は非制限用法。「そして、それは」と補足する。'});
+F('p73','あの城は、私は何度か訪れたことがあるが、美しい。','That castle, [[which I have visited several times]], is beautiful.',{words:['several times','have visited','I','which'],tp:SORT,exp:'補足の which 節は前後をカンマで区切る。'});
+F('p73','私はベスが好きだが、彼女はだれにでも親切だ。','I like [[Beth, who is kind]] to everyone.',{words:['Beth','is','kind','who',','],tp:SORT});
+F('p73','彼女は忙しいと言ったが、それは本当ではなかった。','She said that she was busy, [[which was not true]].',{note:'which / true',exp:', which が前の文全体を受ける。'});
+F('p73','彼は彼女が人形を作ってあげた男の子です。','He is the boy [[who she made a doll]] for.',{note:'who / make',alt:['whom she made a doll','that she made a doll','she made a doll'],exp:'make a doll for the boy の the boy が関係詞になった形。'});
+F('p73','あなたがあなたの弟にしてあげたことはとてもすてきだった。','[[What you did]] for your brother was very nice.',{note:'what / do'});
+F('p73','私には兄が1人いて、彼は大学生です。','I have a brother, [[who is a college student]].',{tp:TR,exp:'「, who」で補足する非制限用法。'});
 
-    function nextQuestion() {
-      userAnswers[currentIndex] = document.getElementById("user-answer").value.trim();
-      if (currentIndex < quiz.length - 1) {
-        currentIndex++;
-        showQuestion();
-      }
-    }
+/* p.75 */
+F('p75','ロンドンは2012年にオリンピックが開催された都市です。','London is the city [[where]] the Olympics were held in 2012.',{note:'where / which から選ぶ',exp:'場所を表す先行詞 → where。'});
+F('p75','1964年は東京でオリンピックが開催された年でした。','1964 was the year [[when]] the Olympics were held in Tokyo.',{note:'when / which から選ぶ',exp:'時を表す先行詞 → when。'});
+F('p75','ここは彼らがふだんサッカーをする公園です。','This is the park in [[which]] they usually play soccer.',{note:'where / which から選ぶ',exp:'前置詞 in のあとなので which。'});
+F('p75','土曜日は私がピアノのレッスンがある日です。','Saturday is the day on [[which]] I have piano lessons.',{note:'when / which から選ぶ',exp:'前置詞 on のあとなので which。'});
+F('p75','私は彼らが打ち合わせに来なかった理由を知らない。','I don\'t know the reason [[why]] they didn\'t come to the meeting.');
+F('p75','こういうわけで私はパーティーに行けなかった。','This is [[why]] I couldn\'t go to the party.',{exp:'This is why 〜 =「こういうわけで〜」。'});
+F('p75','そうやって私たちはお互いに知り合うようになった。','That is [[how]] we came to know each other.',{exp:'That is how 〜 =「そうやって〜」。'});
+F('p75','彼らは上野動物園に行って、そこでパンダを見ることができた。','They went to [[Ueno Zoo, where they were able to see pandas]].',{words:['they','pandas','were able to see','Ueno Zoo','where',','],tp:SORT,exp:'「, where」=「そしてそこで」。'});
+F('p75','私たちはこの前の土曜日に遊園地に行ったが、その日はとても寒かった。','We went to the amusement park [[last Saturday, when it was very cold]].',{words:['it','last Saturday','very cold','was','when',','],tp:SORT,exp:'「, when」=「そしてそのとき」。'});
+F('p75','東京は、私が住んでいるところだが、買い物に便利だ。','Tokyo, [[where I live, is convenient]] for shopping.',{words:['convenient','I','is','live','where',','],tp:SORT});
+F('p75','あなたがロンドンに行った理由を教えてください。','Please tell me [[why you went to]] London.',{note:'why / go'});
+F('p75','私はロンドンに行って、そこで芸術を3年間勉強した。','I went to [[London, where I studied]] art for three years.',{note:'where / study'});
+F('p75','私は初めてロンドンを訪れた日のことを覚えている。','I remember [[the day when I visited]] London for the first time.',{note:'the day / when / visit',alt:['the day that I visited','the day I visited']});
+F('p75','私は長野で生まれたが、そこで1998年にオリンピックが開催された。','I was born in Nagano, [[where the Olympics were held]] in 1998.',{tp:TR,alt:['where the Olympic Games were held','where the Winter Olympics were held'],exp:'場所のあとに「, where」で補足。'});
 
-    function prevQuestion() {
-      userAnswers[currentIndex] = document.getElementById("user-answer").value.trim();
-      if (currentIndex > 0) {
-        currentIndex--;
-        showQuestion();
-      }
-    }
+/* p.77 */
+F('p77','彼女はいつも、訪ねてくる人はだれでも歓迎します。','She always welcomes [[whoever]] visits her.',{note:'whatever / whichever / whoever / whenever / wherever から選ぶ'});
+F('p77','どちらでもほしいものを買っていいですよ。','You can buy [[whichever]] you want.',{note:'whatever / whichever / whoever / whenever / wherever から選ぶ'});
+F('p77','あなたが日本に来るときはいつでも電話してください。','Please call me [[whenever]] you come to Japan.',{note:'whatever / whichever / whoever / whenever / wherever から選ぶ'});
+F('p77','この植物は水のあるところならどこでも育つ。','This plant grows [[wherever]] there is water.',{note:'whatever / whichever / whoever / whenever / wherever から選ぶ'});
+F('p77','選手たちはコーチが言うことなら何でも信じた。','The players believed [[whatever]] the coach said.',{note:'whatever / whichever / whoever / whenever / wherever から選ぶ'});
+F('p77','だれが訪ねてきても、ドアを開けてはいけないよ。','[[Whoever visits you]], you must not open the door.',{words:['visits','you','whoever'],tp:SORT,exp:'whoever =「〜する人はだれでも／だれが〜しても」。'});
+F('p77','メアリーをいつ訪ねても、彼女は外出している。','[[Whenever I visit Mary]], she is out.',{words:['I','Mary','visit','whenever'],tp:SORT});
+F('p77','どんなに一生懸命働いても、彼は疲れを感じない。','[[However hard he works]], he doesn\'t feel tired.',{words:['works','hard','he','however'],tp:SORT,exp:'however + 形容詞[副詞] + 主語 + 動詞 =「どんなに〜でも」。'});
+F('p77','どんなに疲れていても、眠ってはいけない。','[[No matter how tired you feel]], do not sleep.',{words:['feel','how','matter','no','tired','you'],tp:SORT,exp:'no matter how 〜 =「どんなに〜でも」。'});
+F('p77','映画が好きな人ならだれでも私たちのクラブに参加できます。','[[Whoever likes movies]] can join our club.',{note:'whoever / movies',exp:'whoever 節が主語になる。likes の s を忘れずに。'});
+F('p77','ポールは何が起ころうとも落ち着いている。','Paul stays calm [[whatever happens]].',{note:'whatever'});
+F('p77','どんなに眠くても、彼は毎朝自分の犬を散歩させる。','[[No matter how sleepy he is]], he walks his dog every morning.',{note:'no matter how',alt:['No matter how sleepy he feels','No matter how sleepy he may be']});
+F('p77','好きなものは何でも食べていいよ。','You can eat [[whatever you like]].',{tp:TR,alt:['anything you like','whatever you want'],exp:'whatever you like =「あなたが好きなものは何でも」。'});
 
-    function goToResultPage() {
-      userAnswers[currentIndex] = document.getElementById("user-answer").value.trim();
-      document.getElementById("quiz-box").classList.add("hidden");
-      document.getElementById("result-page").classList.remove("hidden");
-    }
+/* 前処理 */
+function parseFill(t){
+  const parts = []; let last = 0, m; const re = /\[\[(.+?)\]\]/g;
+  while ((m = re.exec(t))) {
+    if (m.index > last) parts.push({x: t.slice(last, m.index)});
+    parts.push({b: m[1]}); last = re.lastIndex;
+  }
+  if (last < t.length) parts.push({x: t.slice(last)});
+  return parts;
+}
+const BYID = {};
+QS.forEach((q, i) => {
+  q.id = i + 1; BYID[q.id] = q;
+  q.parts = parseFill(q.t);
+  q.answer = q.parts.filter(p => p.b !== undefined).map(p => p.b).join(' ');
+  q.accept = [q.answer, ...(q.alt || [])];
+});
 
-    function backToLastQuestion() {
-      document.getElementById("result-page").classList.add("hidden");
-      document.getElementById("quiz-box").classList.remove("hidden");
-      showQuestion();
-    }
+/* 採点 */
+function norm(s) {
+  s = String(s).toLowerCase().replace(/[’‘`´]/g, "'");
+  s = s.replace(/\bcannot\b/g, 'can not').replace(/\bcan't\b/g, 'can not').replace(/\bwon't\b/g, 'will not')
+       .replace(/n't\b/g, ' not').replace(/\bi'm\b/g, 'i am').replace(/'ll\b/g, ' will')
+       .replace(/'re\b/g, ' are').replace(/'ve\b/g, ' have');
+  return s.replace(/[.,!?;:"()\[\]。、，．！？]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+const isOk = (q, user) => { const u = norm(user); return u !== '' && q.accept.some(a => norm(a) === u); };
 
-    function showResults() {
-      let score = 0;
-      const resultBox = document.getElementById("result-box");
-      resultBox.innerHTML = "<h2>結果</h2>";
+/* 苦手リスト（この端末のブラウザに保存） */
+let weak = [];
+try { weak = JSON.parse(localStorage.getItem(KEY) || '[]').filter(id => BYID[id]); } catch (e) { weak = []; }
+function setWeak(id, bad) {
+  weak = weak.filter(x => x !== id);
+  if (bad) weak.push(id);
+  try { localStorage.setItem(KEY, JSON.stringify(weak)); } catch (e) {}
+}
 
-      quiz.forEach((q, i) => {
-        const user = userAnswers[i] || "";
-        const correct = q.english;
-        const isCorrect = user.toLowerCase() === correct.toLowerCase();
-        if (isCorrect) score++;
+/* 表示用 */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const ICON_OK = '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><circle cx="14" cy="14" r="10"/></svg>';
+const ICON_NG = '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M5 5l18 18M23 5L5 23"/></svg>';
 
-        const item = document.createElement("div");
-        item.className = "result-item";
+function fillHTML(q, filled) {
+  return q.parts.map(p => {
+    if (p.x !== undefined) return esc(p.x);
+    if (filled) return '<mark class="hl">' + esc(p.b) + '</mark>';
+    return p.b.split(' ').map(() => '<span class="bl"></span>').join('');
+  }).join('');
+}
+const sentence = (q, filled) => fillHTML(q, filled);
+function promptHTML(q, withEn) {
+  const chips = q.words ? q.words.map(w => '<span class="chip">' + esc(w) + '</span>').join('') : '';
+  return '<p class="ja">' + esc(q.ja) + '</p>' +
+    (q.note ? '<p class="note"><span class="tag">ヒント</span>' + esc(q.note) + '</p>' : '') +
+    (withEn && chips ? '<p class="note"><span class="tag">語句</span>' + chips + '</p>' : '') +
+    (withEn ? '<p class="en">' + fillHTML(q, false) + '</p>' : '');
+}
+function howto(q) {
+  const n = norm(q.answer).split(' ').length;
+  return (q.words ? '空所に入る語句を並べかえて、スペースで区切って入力（' : '空所に入る語を、順にスペースで区切って入力（') + n + '語）';
+}
 
-        const mark = isCorrect
-          ? '<span style="color:green; font-weight:bold;">✓ 正解</span>'
-          : '<span style="color:red; font-weight:bold;">× 不正解</span>';
+/* 状態 */
+let orderPref = 'page';
+let S = {view:'home'};
+const app = document.getElementById('app');
 
-        item.innerHTML = `
-          <div><strong>問題 ${i + 1}</strong></div>
-          <div>英文: ${q.sentence}</div>
-          <div>和訳: ${q.japanese}</div>
-          <div>自分の回答: ${user}</div>
-          <div>正しい答え: ${correct}</div>
-          <div>${mark}</div>
-        `;
-        resultBox.appendChild(item);
-      });
+function courseBtn(n, title, sub, act, cls) {
+  return '<button class="course ' + (cls || '') + '" data-act="' + act + '"><span class="n">' + n + '</span><span><b>' + title + '</b><small>' + sub + '</small></span><span class="go" aria-hidden="true">→</span></button>';
+}
 
-      const summary = document.createElement("p");
-      summary.style.fontWeight = "bold";
-      summary.textContent = `正解数: ${score} / ${quiz.length}`;
-      resultBox.appendChild(summary);
-      resultBox.classList.remove("hidden");
-    }
+function homeHTML() {
+  const N = QS.length;
+  const cov = Object.keys(SRC).map(k => {
+    const c = QS.filter(q => q.s === k).length;
+    return '<div><span class="p">' + SRC[k].l.replace(' Exercise ', ' Ex.') + '</span><span>' + SRC[k].t + '</span><span class="c">' + c + '問</span></div>';
+  }).join('');
+  const weakRow = weak.length
+    ? '<section class="sec"><h2>復習</h2>' + courseBtn(weak.length, '間違えた問題を復習', '今までに間違えて、まだ正解していない問題だけを出題', 'weak', 'weak') +
+      '<button class="linkbtn" data-act="resetweak">' + (S.resetArmed ? 'もう一度タップすると、苦手リストを空にします' : '苦手リストを空にする') + '</button></section>'
+    : '';
+  return '<header class="sec"><p class="kicker">英文法ワークブック p.65–77</p><h1>文法一問一答</h1><p class="lead">日本語訳を見て、英文の空欄に入る英語をキーボードで入力します。解き終わったら、間違えた問題だけを復習できます。</p></header>' +
+    '<section class="sec"><h2>コースを選ぶ</h2><div class="list">' +
+    courseBtn(10, '10問コース', 'ランダムに10問・約5分', 'c10') +
+    courseBtn(30, '30問コース', 'ランダムに30問・約15分', 'c30') +
+    courseBtn(N, '全問コース', '全' + N + '問・約' + Math.round(N / 2) + '分', 'call') +
+    '</div><div class="opt"><span>全問コースの順番</span><div class="seg" role="group" aria-label="全問コースの順番">' +
+    '<button data-act="ord-page" aria-pressed="' + (orderPref === 'page') + '">ページ順</button>' +
+    '<button data-act="ord-shuffle" aria-pressed="' + (orderPref === 'shuffle') + '">ランダム</button></div></div></section>' +
+    weakRow +
+    '<section class="sec"><h2>出題範囲</h2><div class="cov">' + cov + '</div>' +
+    '<p class="muted">採点では大文字・小文字、ピリオドやカンマの違いは区別しません。</p></section>';
+}
 
-    // Enterキーで次へ
-    window.onload = () => {
-      startQuiz('all');
-      const answerInput = document.getElementById("user-answer");
-      answerInput.addEventListener("keydown", function(event) {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          if (currentIndex < quiz.length - 1) {
-            nextQuestion();
-          } else {
-            goToResultPage();
-          }
-        }
-      });
-    };
-  </script>
-</body>
-</html>
+function quizHTML() {
+  const q = BYID[S.ids[S.i]], n = S.ids.length;
+  const pct = ((S.i + (S.answered ? 1 : 0)) / n * 100).toFixed(1);
+  let body;
+  if (!S.answered) {
+    body = '<form id="f" autocomplete="off"><div><label class="lbl" for="ans">' + howto(q) + '</label>' +
+      '<input id="ans" class="ans" type="text" inputmode="text" enterkeyhint="done" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" lang="en" placeholder="ここに英語で入力"></div>' +
+      '<p class="warn" id="warn" hidden>答えを入力するか、「わからない」を押してください。</p>' +
+      '<div class="row"><button class="btn primary" type="submit">答え合わせ</button><button class="btn ghost" type="button" data-act="skip">わからない</button></div></form>';
+  } else {
+    const L = S.last, ok = L.ok;
+    const others = q.accept.length > 1
+      ? '<p class="others">別の正解例: ' + q.accept.slice(1, 4).map(esc).join(' / ') + '</p>' : '';
+    body = '<div class="verdict ' + (ok ? 'good' : 'bad') + '" role="status">' + (ok ? ICON_OK : ICON_NG) +
+      '<strong>' + (ok ? (L.over ? '正解にしました' : '正解！') : '不正解') + '</strong></div>' +
+      (!ok ? '<div class="yours"><span class="lbl">あなたの答え</span><span class="s">' + (L.user ? esc(L.user) : '（無回答）') + '</span></div>' : '') +
+      '<div><span class="lbl">正解</span><p class="en">' + sentence(q, true) + '</p></div>' + others +
+      (q.exp ? '<p class="exp"><span class="tag">ポイント</span>' + esc(q.exp) + '</p>' : '') +
+      '<div class="row">' +
+      '<button class="btn primary" id="next" data-act="next">' + (S.i + 1 >= n ? '結果を見る' : '次の問題 →') + '</button>' +
+      (!ok ? '<button class="btn ghost" data-act="override">別解として正解にする</button>' : '') + '</div>';
+  }
+  return '<div class="qtop"><div class="prog"><span class="cnt">' + (S.i + 1) + '<small> / ' + n + '</small></span>' +
+    '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + n + '" aria-valuenow="' + S.i + '"><i style="width:' + pct + '%"></i></div></div>' +
+    '<button class="quit" data-act="quit">やめる</button></div>' +
+    (S.confirmQuit ? '<div class="confirm"><span>ここまでの結果は保存されません。やめますか？</span><span class="row"><button class="btn ghost" data-act="quit-no">続ける</button><button class="btn ghost" data-act="quit-yes">やめる</button></span></div>' : '') +
+    (S.review ? '<p class="flag">復習 ' + esc(S.label) + '</p>' : '<p class="flag">' + esc(S.label) + '</p>') +
+    '<section class="qcard"><div class="meta"><span>' + SRC[q.s].l + '</span><span>' + SRC[q.s].t + '</span><span>' + (q.tp || '穴埋め') + '</span></div>' +
+    promptHTML(q, !S.answered) + body + '</section>';
+}
+
+function resultHTML() {
+  const n = S.res.length, ok = S.res.filter(r => r.ok).length, wr = S.res.filter(r => !r.ok);
+  const pct = Math.round(ok / n * 100);
+  const msg = wr.length === 0
+    ? (S.review ? '復習した問題はすべて正解です。' : '全問正解です。')
+    : pct >= 80 ? 'よくできました。間違えた問題を復習しましょう。' : '間違えた問題をもう一度解いて、定着させましょう。';
+  const list = wr.map(r => {
+    const q = BYID[r.id];
+    return '<div class="wi"><div class="meta"><span>' + SRC[q.s].l + '</span><span>' + SRC[q.s].t + '</span></div>' +
+      '<p class="ja">' + esc(q.ja) + '</p><p class="en">' + sentence(q, true) + '</p>' +
+      '<div class="yours"><span class="lbl">あなたの答え</span><span class="s">' + (r.user ? esc(r.user) : '（無回答）') + '</span></div></div>';
+  }).join('');
+  const again = ['10', '30', 'all'].includes(String(S.kind));
+  return '<header class="sec"><p class="flag">' + esc(S.label) + (S.review ? '（復習）' : '') + ' の結果</p>' +
+    '<div class="score"><span class="big">' + ok + '</span><span class="of">/ ' + n + '　' + pct + '%</span></div>' +
+    '<div class="split" aria-hidden="true"><i style="width:' + pct + '%"></i></div><p class="lead">' + msg + '</p></header>' +
+    (wr.length ? '<section class="sec"><h2>間違えた問題（' + wr.length + '問）</h2><div class="wlist">' + list + '</div></section>' : '') +
+    '<div class="stack">' +
+    (wr.length ? '<button class="btn primary" data-act="review">間違えた' + wr.length + '問を復習する</button>' : '') +
+    (again ? '<button class="btn ghost" data-act="again">もう一度（' + esc(S.label) + '）</button>' : '') +
+    '<button class="btn ghost" data-act="home">ホームに戻る</button></div>' +
+    (weak.length ? '<p class="muted">苦手リストに ' + weak.length + '問 残っています。ホームからいつでも復習できます。</p>' : '');
+}
+
+function render() {
+  const f = document.getElementById('ans');
+  if (f && S.view === 'quiz' && !S.answered) S.draft = f.value;
+  app.innerHTML = S.view === 'home' ? homeHTML() : S.view === 'quiz' ? quizHTML() : resultHTML();
+  if (S.view === 'quiz') {
+    if (S.answered) { const b = document.getElementById('next'); if (b) b.focus({preventScroll:true}); }
+    else { const i = document.getElementById('ans'); if (i) { i.value = S.draft || ''; i.focus({preventScroll:true}); } }
+  }
+}
+
+function start(kind, ids, label, review) {
+  S = {view:'quiz', kind, ids, label, review: !!review, i:0, res:[], answered:false, draft:'', confirmQuit:false};
+  render(); window.scrollTo(0, 0);
+}
+function startCourse(kind) {
+  const all = QS.map(q => q.id);
+  if (kind === 'all') start('all', orderPref === 'shuffle' ? shuffle(all) : all, '全問コース', false);
+  else start(String(kind), shuffle(all).slice(0, kind), kind + '問コース', false);
+}
+
+function submit(skip) {
+  const q = BYID[S.ids[S.i]], inp = document.getElementById('ans');
+  const user = skip ? '' : inp.value.trim();
+  if (!skip && norm(user) === '') { document.getElementById('warn').hidden = false; inp.focus(); return; }
+  const ok = !skip && isOk(q, user);
+  S.res.push({id: q.id, user, ok});
+  setWeak(q.id, !ok);
+  S.last = {ok, user}; S.answered = true; S.t0 = Date.now(); S.draft = '';
+  render();
+  const v = document.querySelector('.verdict'); if (v) v.scrollIntoView({block:'nearest'});
+}
+
+function act(a) {
+  if (a === 'c10') startCourse(10);
+  else if (a === 'c30') startCourse(30);
+  else if (a === 'call') startCourse('all');
+  else if (a === 'weak') start('weak', shuffle(weak), '苦手リスト ' + weak.length + '問', true);
+  else if (a === 'ord-page') { orderPref = 'page'; render(); }
+  else if (a === 'ord-shuffle') { orderPref = 'shuffle'; render(); }
+  else if (a === 'resetweak') {
+    if (S.resetArmed) { weak = []; try { localStorage.removeItem(KEY); } catch (e) {} S.resetArmed = false; }
+    else S.resetArmed = true;
+    render();
+  }
+  else if (a === 'quit') { S.confirmQuit = true; render(); }
+  else if (a === 'quit-no') { S.confirmQuit = false; render(); }
+  else if (a === 'quit-yes') { S = {view:'home'}; render(); window.scrollTo(0, 0); }
+  else if (a === 'skip') submit(true);
+  else if (a === 'override') {
+    const r = S.res[S.res.length - 1]; r.ok = true; setWeak(r.id, false);
+    S.last.ok = true; S.last.over = true; render();
+  }
+  else if (a === 'next') {
+    if (Date.now() - (S.t0 || 0) < 300) return;
+    S.i++;
+    if (S.i >= S.ids.length) S.view = 'result'; else { S.answered = false; S.draft = ''; }
+    render(); window.scrollTo(0, 0);
+  }
+  else if (a === 'review') {
+    const ids = S.res.filter(r => !r.ok).map(r => r.id);
+    start('review', shuffle(ids), '間違えた問題 ' + ids.length + '問', true);
+  }
+  else if (a === 'again') {
+    if (S.kind === 'all') startCourse('all'); else startCourse(Number(S.kind));
+  }
+  else if (a === 'home') { S = {view:'home'}; render(); window.scrollTo(0, 0); }
+}
+
+app.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act); });
+app.addEventListener('submit', e => { e.preventDefault(); if (e.target.id === 'f') submit(false); });
+render();
+</script>
+
+</body></html>
